@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>张裕霖 — 把想法，造成产品。</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07070d; --ink:#f1f1f6; --ink-dim:#9b9ba8; --ink-faint:#6a6a78;
+    --line:rgba(255,255,255,.08);
+    --c1:#7c8cff; --c2:#4fe0c8; --accent:#8b9dff;
+    --serif:'Noto Serif SC',"Songti SC",serif;
+    --sans:'Noto Sans SC',-apple-system,sans-serif;
+    --mono:'JetBrains Mono','IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;
+    overflow:hidden;-webkit-font-smoothing:antialiased}
+  ::selection{background:rgba(124,140,255,.35)}
+
+  /* 背景光球 */
+  .aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .blob{position:absolute;border-radius:50%;filter:blur(120px);mix-blend-mode:screen;opacity:.5;transition:background 1.4s ease;will-change:transform}
+  .b1{width:52vmax;height:52vmax;top:-18%;right:-12%;background:var(--c1)}
+  .b2{width:42vmax;height:42vmax;bottom:-22%;left:-10%;background:var(--c2)}
+  .b3{width:30vmax;height:30vmax;top:38%;left:30%;background:var(--c1);opacity:.26}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E")}
+
+  /* 顶栏 */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;justify-content:space-between;align-items:center;padding:1.4rem 4vw}
+  .logo{font-family:var(--mono);font-size:1rem;font-weight:700;letter-spacing:.14em;color:var(--ink)}
+  .logo b{color:var(--accent)}
+  .top-links{display:flex;gap:2rem;align-items:center}
+  .top-links a{font-family:var(--mono);font-size:.86rem;color:var(--ink-dim);text-decoration:none;letter-spacing:.05em;transition:color .3s}
+  .top-links a:hover{color:var(--ink)}
+  .top-contact{font-family:var(--mono);font-size:.84rem;color:var(--ink);text-decoration:none;
+    padding:.48rem 1.08rem;border:1px solid var(--line);border-radius:99px;backdrop-filter:blur(12px);
+    background:rgba(255,255,255,.03);transition:.3s}
+  .top-contact:hover{border-color:rgba(255,255,255,.3)}
+
+  /* 指示器 */
+  .dots{position:fixed;right:2.4vw;top:50%;transform:translateY(-50%);z-index:60;display:flex;flex-direction:column;gap:.85rem}
+  .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer;transition:all .35s;border:none;padding:0}
+  .dot.active{background:var(--accent);transform:scale(1.5);box-shadow:0 0 12px var(--accent)}
+  .dot:hover{background:rgba(255,255,255,.6)}
+
+  /* 回到首页 */
+  .back-top{position:fixed;right:2.4vw;bottom:2.4rem;z-index:60;width:50px;height:50px;border-radius:50%;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(12px);
+    opacity:0;transform:translateY(16px);pointer-events:none;transition:all .35s}
+  .back-top.show{opacity:1;transform:none;pointer-events:auto}
+  .back-top:hover{background:var(--accent);color:#0a0a12;border-color:var(--accent);transform:translateY(-3px)}
+  .back-top svg{width:18px;height:18px}
+
+  /* 滚动容器 + 分镜 */
+  .scroller{position:relative;z-index:2;height:100vh;overflow-y:auto;scroll-snap-type:y mandatory;scroll-behavior:smooth;scrollbar-width:none}
+  .scroller::-webkit-scrollbar{display:none}
+  .scene{min-height:100vh;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;align-items:center;padding:10vh 6vw}
+
+  .scene-inner{display:grid;grid-template-columns:.82fr 1.18fr;gap:3.4vw;align-items:center;width:100%;max-width:1400px;margin:0 auto}
+  .scene.center .scene-inner{grid-template-columns:1fr;text-align:center;max-width:920px}
+  .scene-inner.wide{grid-template-columns:1fr;max-width:1300px;align-content:center;gap:2.4rem}
+
+  .scene-num{font-family:var(--mono);font-size:.9rem;font-weight:700;letter-spacing:.35em;color:var(--accent);transition:color 1.4s}
+  .scene-num::before{content:"—— ";color:var(--ink-faint)}
+  .scene-title{font-family:var(--serif);font-weight:700;font-size:clamp(2.7rem,5.2vw,4.6rem);line-height:1.05;color:#fff;margin:1.1rem 0 .9rem}
+  .scene-title-sm{font-family:var(--serif);font-weight:700;font-size:clamp(2.4rem,4.6vw,4rem);line-height:1.1;color:#fff;margin:1rem 0 0}
+  .scene-sub-sm{font-family:var(--mono);font-size:.76rem;color:var(--ink-faint);letter-spacing:.08em;margin-top:.7rem}
+  .scene-tag{font-family:var(--mono);font-size:.8rem;letter-spacing:.14em;color:var(--accent);margin-bottom:1.4rem;transition:color 1.4s}
+  .scene-desc{max-width:470px;color:var(--ink-dim);font-size:1.02rem;line-height:1.85;margin-bottom:1.8rem}
+  .scene.center .scene-desc{margin-left:auto;margin-right:auto}
+  .scene-stack{font-family:var(--mono);font-size:.78rem;color:var(--ink-faint);letter-spacing:.04em;margin-bottom:2.4rem}
+  .scene-btn{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.84rem;font-weight:700;
+    color:#0a0a12;text-decoration:none;padding:.9rem 1.8rem;border-radius:99px;background:var(--accent);
+    box-shadow:0 8px 30px rgba(0,0,0,.4);transition:transform .35s,background 1.4s}
+  .scene-btn:hover{transform:translateY(-3px)}
+  .scene-btn.ghost{background:rgba(255,255,255,.03);color:var(--ink);border:1px solid var(--line);backdrop-filter:blur(10px)}
+  .scene-btn.ghost:hover{border-color:rgba(255,255,255,.3)}
+  .scene.center .scene-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+
+  /* 演示视频/图框（放大 + 进度条） */
+  .scene-visual{display:flex;align-items:center;justify-content:center}
+  .demo-frame{position:relative;width:100%;aspect-ratio:16/10;border-radius:22px;overflow:hidden;
+    border:1px solid rgba(255,255,255,.18);background:#000;
+    box-shadow:0 40px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.22);
+    transform:translateZ(0)}
+  .demo-frame video,.demo-frame img{width:100%;height:100%;object-fit:cover;display:block}
+  .demo-frame[data-video] video{cursor:pointer}
+  .demo-frame::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(135deg,rgba(255,255,255,.14),transparent 42%)}
+  .demo-playback-toggle{position:absolute;left:50%;top:50%;z-index:8;width:68px;height:68px;
+    display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.28);
+    color:#fff;background:rgba(7,7,13,.54);backdrop-filter:blur(18px) saturate(1.25);
+    box-shadow:0 18px 48px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.22);
+    opacity:0;visibility:hidden;pointer-events:none;cursor:pointer;
+    transform:translate(-50%,-50%) scale(.88);
+    transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s}
+  .demo-playback-toggle svg{position:absolute;width:27px;height:27px;fill:currentColor}
+  .demo-pause-icon{display:none}
+  .demo-frame.is-user-paused .demo-playback-toggle,
+  .demo-frame.is-play-confirming .demo-playback-toggle{opacity:1;visibility:visible;pointer-events:auto;
+    transform:translate(-50%,-50%) scale(1);transition-delay:0s}
+  .demo-frame.is-play-confirming .demo-play-icon{display:none}
+  .demo-frame.is-play-confirming .demo-pause-icon{display:block}
+  .demo-playback-toggle:hover{background:rgba(7,7,13,.68);border-color:rgba(255,255,255,.45)}
+  .demo-playback-toggle:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+  .demo-badge{position:absolute;left:14px;top:14px;z-index:6;font-family:var(--mono);font-size:.68rem;
+    letter-spacing:.12em;color:#fff;background:rgba(8,8,14,.55);backdrop-filter:blur(8px);
+    padding:.35rem .7rem;border-radius:99px;border:1px solid rgba(255,255,255,.15)}
+  /* 进度条 */
+  .demo-progress{position:absolute;left:0;right:0;bottom:0;z-index:6;height:30px;display:flex;align-items:center;
+    padding:0 16px;cursor:pointer;opacity:0;transition:opacity .3s;
+    background:linear-gradient(transparent,rgba(4,4,9,.65))}
+  .demo-frame:hover .demo-progress{opacity:1}
+  .demo-progress-track{position:relative;flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.22)}
+  .demo-progress-fill{position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:3px;background:var(--accent)}
+  .demo-progress-fill::after{content:"";position:absolute;right:-7px;top:50%;transform:translateY(-50%);
+    width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .demo-time{flex:0 0 auto;margin-left:12px;font-family:var(--mono);font-size:.68rem;color:rgba(255,255,255,.85);letter-spacing:.05em}
+
+  /* 开场屏 */
+  .hero-title{font-family:var(--serif);font-weight:700;font-size:clamp(3.4rem,8.4vw,7.4rem);line-height:1.06;color:#fff;margin:1.4rem 0}
+  .hero-title .grad{background:linear-gradient(115deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent;transition:background 1.4s}
+  .hero-sub{font-size:clamp(1.05rem,1.6vw,1.3rem);color:var(--ink);font-weight:400;margin-bottom:.9rem}
+  .hero-status{font-family:var(--mono);font-size:.8rem;color:var(--ink-faint);letter-spacing:.06em;margin-bottom:2.4rem}
+  .hero-status i{color:var(--accent);font-style:normal;transition:color 1.4s}
+  .scroll-cue{position:absolute;bottom:2.2rem;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:.7rem;letter-spacing:.34em;color:var(--ink-faint);
+    display:flex;flex-direction:column;align-items:center;gap:.9rem}
+  .scroll-cue::after{content:"";width:1px;height:44px;background:linear-gradient(var(--accent),transparent);animation:cue 2s ease-in-out infinite}
+  @keyframes cue{0%,100%{opacity:.25;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
+
+  /* 玻璃卡片通用 */
+  .card{background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:18px;
+    transition:transform .45s cubic-bezier(.16,1,.3,1),border-color .45s}
+  .card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.22)}
+
+  /* 核心能力 */
+  .skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+  .skill-card{padding:1.8rem 1.7rem;position:relative;overflow:hidden}
+  .skill-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .45s}
+  .skill-card:hover::before{opacity:1}
+  .skill-num{font-family:var(--mono);font-size:.72rem;color:var(--accent);letter-spacing:.2em;transition:color 1.4s}
+  .skill-name{font-family:var(--serif);font-weight:600;font-size:1.4rem;color:#fff;margin:.7rem 0 .9rem}
+  .skill-items{font-size:.86rem;color:var(--ink-dim);line-height:1.8;margin-bottom:.9rem}
+  .skill-proof{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint);letter-spacing:.03em}
+
+  /* 更多作品 —— 知宠式固定舞台轮播 */
+  #works .scene-inner.wide{gap:1.45rem}
+  .project-carousel{position:relative;width:100%;min-width:0;overflow:hidden;border:1px solid rgba(255,255,255,.12);
+    border-radius:28px;background:#0d0e16;box-shadow:0 34px 90px rgba(0,0,0,.38);isolation:isolate}
+  .project-stage{position:relative;min-height:clamp(350px,53vh,580px);overflow:hidden}
+  .project-slide{position:absolute;inset:0;overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;
+    transform:translate3d(64px,0,0) scale(.985);transition:opacity .65s ease,
+    transform .65s cubic-bezier(.16,1,.3,1),visibility 0s linear .65s}
+  .project-slide.is-before{transform:translate3d(-64px,0,0) scale(.985)}
+  .project-slide.is-active{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition-delay:0s}
+  .project-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;
+    filter:saturate(.82) contrast(1.04);transform:scale(1.015);transition:transform 7s cubic-bezier(.2,.7,.2,1)}
+  .project-slide.is-active .project-media{transform:scale(1.055)}
+  .project-slide[data-project="threeq"],.project-slide[data-project="xiaoguai"],.project-slide[data-project="weather"]{
+    background:radial-gradient(circle at 78% 44%,rgba(68,118,164,.25),transparent 35%),#090b13}
+  .project-slide[data-project="threeq"] .project-media,.project-slide[data-project="xiaoguai"] .project-media,
+  .project-slide[data-project="weather"] .project-media{right:0;left:auto;width:58%;padding:2.4rem 4.2rem;
+    object-fit:contain;filter:saturate(.88) contrast(1.02);transform:scale(1)}
+  .project-slide[data-project="threeq"].is-active .project-media,.project-slide[data-project="xiaoguai"].is-active .project-media,
+  .project-slide[data-project="weather"].is-active .project-media{transform:scale(1.025)}
+  .project-slide[data-project="battlecity"] .project-media{object-position:center 46%}
+  .project-slide[data-project="yujian"] .project-media{object-position:center 38%}
+  .project-slide[data-project="history"] .project-media{object-position:center top}
+  .project-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,7,13,.96) 0%,rgba(6,7,13,.86) 30%,rgba(6,7,13,.28) 62%,rgba(6,7,13,.1) 100%),
+    linear-gradient(0deg,rgba(6,7,13,.76) 0%,transparent 42%)}
+  .project-copy{position:absolute;z-index:2;left:clamp(72px,6vw,96px);top:50%;width:min(520px,48%);
+    transform:translateY(-52%);text-align:left}
+  .project-kicker{display:flex;align-items:center;gap:.75rem;font-family:var(--mono);font-size:.7rem;font-weight:700;
+    letter-spacing:.18em;color:#85dff3;text-transform:uppercase}
+  .project-kicker::before{content:"";width:28px;height:1px;background:currentColor}
+  .project-title{margin:1rem 0 .9rem;font-family:var(--serif);font-size:clamp(2.45rem,4.4vw,4.5rem);
+    font-weight:700;line-height:1.04;letter-spacing:-.02em;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.45)}
+  .project-desc{max-width:500px;color:rgba(241,241,246,.78);font-size:clamp(.88rem,1.15vw,1rem);line-height:1.78}
+  .project-tags{display:flex;flex-wrap:wrap;gap:.48rem;margin:1.15rem 0 1.35rem;list-style:none}
+  .project-tags li{padding:.36rem .68rem;border:1px solid rgba(255,255,255,.14);border-radius:99px;
+    color:rgba(241,241,246,.72);background:rgba(8,9,16,.36);font-family:var(--mono);font-size:.64rem;letter-spacing:.03em;
+    backdrop-filter:blur(12px)}
+  .project-actions{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+  .project-link{display:inline-flex;align-items:center;gap:.55rem;padding:.72rem 1.12rem;border-radius:99px;
+    border:1px solid rgba(255,255,255,.18);font-family:var(--mono);font-size:.72rem;font-weight:700;
+    text-decoration:none;transition:transform .3s,background .3s,border-color .3s}
+  .project-link.primary{color:#071014;background:#77d8ef;border-color:#77d8ef}
+  .project-link.secondary{color:#fff;background:rgba(10,11,19,.48);backdrop-filter:blur(14px)}
+  .project-link:hover{transform:translateY(-2px);border-color:#fff}
+  .project-arrow{position:absolute;z-index:5;top:50%;display:grid;width:48px;height:48px;place-items:center;
+    transform:translateY(-50%);border:1px solid rgba(255,255,255,.18);border-radius:50%;color:#fff;
+    background:rgba(7,8,14,.48);backdrop-filter:blur(16px);cursor:pointer;transition:background .3s,transform .3s,border-color .3s}
+  .project-arrow:hover{background:rgba(119,216,239,.9);border-color:#77d8ef;color:#071014;transform:translateY(-50%) scale(1.06)}
+  .project-arrow:focus-visible,.project-link:focus-visible,
+  .project-profile-link:focus-visible{outline:2px solid #fff;outline-offset:3px}
+  .project-arrow svg{width:18px;height:18px}
+  .project-arrow.prev{left:18px}.project-arrow.next{right:18px}
+  .project-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-width:0;padding:.72rem 1.1rem;
+    border-top:1px solid rgba(255,255,255,.09);color:var(--ink-faint);font-family:var(--mono);font-size:.65rem}
+  .project-footer-note{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .project-profile-link{flex:0 0 auto;color:rgba(255,255,255,.76);text-decoration:none;transition:color .25s}
+  .project-profile-link:hover{color:#fff}
+
+  /* 关于屏 */
+  .about-stats{display:flex;gap:2.6rem;margin:1.8rem 0 2rem;flex-wrap:wrap}
+  .about-stat .n{font-family:var(--serif);font-weight:700;font-size:2.6rem;line-height:1;color:#fff}
+  .about-stat .n em{color:var(--accent);font-style:normal;transition:color 1.4s}
+  .about-stat .l{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint);margin-top:.5rem;letter-spacing:.06em}
+  .cred-box{padding:2rem 2rem}
+  .cred-title{font-family:var(--mono);font-size:.74rem;color:var(--accent);letter-spacing:.16em;margin-bottom:1.2rem;transition:color 1.4s}
+  .cred-hint{font-family:var(--mono);font-size:.66rem;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:1.2rem}
+  .cred-item{padding:1rem .8rem;border-top:1px solid var(--line);cursor:pointer;border-radius:8px;transition:background .3s}
+  .cred-item:first-of-type{border-top:none;padding-top:0}
+  .cred-item:hover{background:rgba(255,255,255,.05)}
+  .cred-name{font-size:1rem;color:#fff;font-weight:500;display:flex;align-items:center;gap:.5rem}
+  .cred-name::after{content:"⊕";color:var(--accent);font-size:.9rem;transition:color 1.4s}
+  .cred-issuer{font-family:var(--mono);font-size:.74rem;color:var(--ink-faint);margin-top:.35rem}
+
+  /* 证书 Lightbox */
+  .cert-lightbox{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .35s}
+  .cert-lightbox.show{opacity:1;pointer-events:auto}
+  .cert-lightbox-bg{position:absolute;inset:0;background:rgba(4,4,9,.86);backdrop-filter:blur(12px)}
+  .cert-lightbox img{position:relative;z-index:2;max-width:88vw;max-height:86vh;border-radius:10px;
+    box-shadow:0 40px 100px rgba(0,0,0,.7);animation:certin .4s cubic-bezier(.16,1,.3,1)}
+  @keyframes certin{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+  .cert-close{position:absolute;top:4vh;right:4vw;z-index:3;width:46px;height:46px;border-radius:50%;
+    background:rgba(255,255,255,.07);border:1px solid var(--line);color:#fff;font-size:1.5rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.3s;font-family:var(--sans)}
+  .cert-close:hover{background:rgba(255,255,255,.16)}
+
+  /* 联系屏 */
+  .contact-mail{font-family:var(--serif);font-weight:600;font-size:clamp(1.5rem,3vw,2.4rem);color:#fff;
+    text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:.3rem;transition:.3s}
+  .contact-mail:hover{opacity:.75}
+
+  /* 入场 */
+  .reveal{opacity:0;transform:translateY(40px);transition:opacity 1s cubic-bezier(.16,1,.3,1),transform 1s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  .d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}.d5{transition-delay:.5s}.d6{transition-delay:.6s}
+
+  @media(max-width:900px){
+    .scene-inner{grid-template-columns:1fr;gap:2rem;text-align:center}
+    .scene-desc{margin-left:auto;margin-right:auto}
+    .scene-visual{order:-1}
+    .skill-grid{grid-template-columns:1fr}
+    #works .scene-head{text-align:left}
+    .project-copy{width:min(570px,68%)}
+    .dots{right:1rem}
+    .top-links a:not(.top-contact){display:none}
+    .about-stats{justify-content:center}
+  }
+  @media(max-width:760px){
+    #works.scene{padding-inline:1rem}
+    #works .scene-inner.wide{gap:1.15rem}
+    .project-carousel{border-radius:22px}
+    .project-stage{min-height:clamp(470px,68vh,590px)}
+    .project-media{height:44%;object-position:center!important;filter:saturate(.88) brightness(.82)}
+    .project-slide[data-project="threeq"] .project-media,.project-slide[data-project="xiaoguai"] .project-media,
+    .project-slide[data-project="weather"] .project-media{top:0;right:0;left:0;width:100%;height:44%;padding:.8rem 3.4rem;
+      object-fit:contain;filter:saturate(.9) brightness(.82);transform:none}
+    .project-shade{background:linear-gradient(180deg,rgba(7,8,14,.04) 0%,rgba(7,8,14,.82) 38%,#080910 51%,#080910 100%)}
+    .project-copy{top:auto;right:24px;bottom:30px;left:24px;width:auto;transform:none}
+    .project-title{font-size:clamp(2rem,12vw,3.1rem);margin:.75rem 0 .65rem}
+    .project-desc{font-size:.84rem;line-height:1.65}
+    .project-tags{margin:.85rem 0 1rem}
+    .project-arrow{top:22%;width:42px;height:42px}
+    .project-arrow.prev{left:12px}.project-arrow.next{right:12px}
+    .project-footer{padding-inline:.85rem}
+    .back-top{display:none}
+    .demo-playback-toggle{width:58px;height:58px}
+  }
+  @media(max-height:760px) and (min-width:761px){
+    #works.scene{padding-top:8vh;padding-bottom:5vh}
+    #works .scene-inner.wide{gap:1rem}
+    #works .scene-title-sm{font-size:clamp(2.2rem,4vw,3.25rem);margin-top:.55rem}
+    .project-stage{min-height:350px;height:48vh}
+    .project-copy{transform:translateY(-48%)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .project-slide,.project-media{transition-duration:.01ms!important;transform:none!important}
+    .demo-playback-toggle{transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+  <div class="aurora">
+    <div class="blob b1" id="c1"></div>
+    <div class="blob b2" id="c2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <div class="grain"></div>
+
+  <div class="topbar">
+    <div class="logo">Yulin<b>.</b>Zhang</div>
+    <div class="top-links">
+      <a href="#" data-go="s1">作品</a>
+      <a href="#" data-go="skills">能力</a>
+      <a href="#" data-go="about">关于</a>
+      <a class="top-contact" href="#" data-go="contact">联系 ↗</a>
+    </div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <main class="scroller" id="scroller">
+
+    <!-- 00 开场 -->
+    <section class="scene center" data-c1="#7c8cff" data-c2="#4fe0c8" data-accent="#8b9dff" id="s0">
+      <div class="scene-inner">
+        <div>
+          <p class="scene-tag reveal" style="color:var(--ink-faint)">// 张裕霖 · 个人作品集 — 2026</p>
+          <h1 class="hero-title reveal d1">把想法，<br><span class="grad">造成产品。</span></h1>
+          <p class="hero-sub reveal d2">AI 应用开发工程师 / 全栈开发者</p>
+          <p class="hero-status reveal d3">深圳 <i>·</i> 2025 届 <i>·</i> 寻求 AI 应用开发 / 全栈开发岗位</p>
+          <div class="scene-btns reveal d4">
+            <a class="scene-btn" href="#" data-go="s1">进入作品 ↓</a>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-cue">SCROLL</div>
+    </section>
+
+    <!-- 01 知宠官网 -->
+    <section class="scene" data-c1="#4fe0c8" data-c2="#a8e07c" data-accent="#54e0b8" id="s1">
+      <div class="scene-inner">
+        <div class="scene-text">
+          <p class="scene-num reveal">01</p>
+          <h2 class="scene-title reveal d1">知宠官网</h2>
+          <p class="scene-tag reveal d2">宠物健康科技 · WEB 全栈</p>
+          <p class="scene-desc reveal d3">一个宠物健康科技品牌的完整官网。Nuxt 4 全栈，含产品、解决方案、健康研究院内容系统，以及事务化写入的意见反馈与邮件队列。</p>
+          <p class="scene-stack reveal d4">Nuxt 4 · Vue 3 · TypeScript · Prisma · PostgreSQL</p>
+          <a class="scene-btn reveal d5" href="https://github.com/Anson-Yuz/zhipet-official-site" target="_blank" rel="noopener">查看仓库 ↗</a>
+        </div>
+        <div class="scene-visual reveal d2">
+          <div class="demo-frame" data-video>
+            <video autoplay muted loop playsinline poster="images/zhipet-poster.jpg"><source src="images/zhipet-demo.mp4" type="video/mp4"></video>
+            <span class="demo-badge">演示录屏</span>
+            <div class="demo-progress"><div class="demo-progress-track"><div class="demo-progress-fill"></div></div><span class="demo-time"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 基金 -->
+    <section class="scene" data-c1="#4fc3e0" data-c2="#7c8cff" data-accent="#5fc8e8" id="s2">
+      <div class="scene-inner">
+        <div class="scene-text">
+          <p class="scene-num reveal">02</p>
+          <h2 class="scene-title reveal d1">基金智能分析</h2>
+          <p class="scene-tag reveal d2">WINDOWS 桌面 · 全栈 + AI</p>
+          <p class="scene-desc reveal d3">让 DeepSeek 盯盘，你只看结论。持仓截图 OCR 一键导入，行情与资金自动采集，每天定点生成 AI 投资建议，打包成免环境安装的桌面应用。</p>
+          <p class="scene-stack reveal d4">FastAPI · Vue 3 · SQLite · DeepSeek · OCR · PyInstaller</p>
+          <a class="scene-btn reveal d5" href="https://github.com/Anson-Yuz/fund-intelligence" target="_blank" rel="noopener">查看案例 →</a>
+        </div>
+        <div class="scene-visual reveal d2">
+          <div class="demo-frame" data-video>
+            <video autoplay muted loop playsinline poster="images/fund-poster.jpg"><source src="images/fund-demo.mp4" type="video/mp4"></video>
+            <span class="demo-badge">演示录屏</span>
+            <div class="demo-progress"><div class="demo-progress-track"><div class="demo-progress-fill"></div></div><span class="demo-time"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 拾忆 -->
+    <section class="scene" data-c1="#ffb37c" data-c2="#ff7ca8" data-accent="#ffab7c" id="s3">
+      <div class="scene-inner">
+        <div class="scene-text">
+          <p class="scene-num reveal">03</p>
+          <h2 class="scene-title reveal d1">拾忆</h2>
+          <p class="scene-tag reveal d2">AI 叙事游戏 · WEB · 腾讯云黑客松</p>
+          <p class="scene-desc reveal d3">进入一位阿尔茨海默症老人的记忆，把他遗失的人生一片片拼回来。每个 NPC 都由大模型驱动，任意输入都能动态回应。</p>
+          <p class="scene-stack reveal d4">Vue 3 · TypeScript · FastAPI · DeepSeek · 腾讯云</p>
+          <a class="scene-btn reveal d5" href="https://github.com/Anson-Yuz/memory-healer" target="_blank" rel="noopener">查看案例 →</a>
+        </div>
+        <div class="scene-visual reveal d2">
+          <div class="demo-frame" data-video>
+            <video autoplay muted loop playsinline poster="images/shiyi-poster.jpg?v=441acd1e"><source src="images/shiyi-demo.mp4?v=441acd1e" type="video/mp4"></video>
+            <span class="demo-badge">演示录屏</span>
+            <div class="demo-progress"><div class="demo-progress-track"><div class="demo-progress-fill"></div></div><span class="demo-time"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 核心能力 -->
+    <section class="scene" data-c1="#9d7cff" data-c2="#7c8cff" data-accent="#a58cff" id="skills">
+      <div class="scene-inner wide">
+        <div class="scene-head">
+          <p class="scene-num reveal">04</p>
+          <h2 class="scene-title-sm reveal d1">核心能力</h2>
+        </div>
+        <div class="skill-grid">
+          <div class="card skill-card reveal d2">
+            <p class="skill-num">01</p>
+            <p class="skill-name">AI 应用开发</p>
+            <p class="skill-items">大模型 API 集成 · Prompt 与 Agent 工作流 · OCR · RAG / 向量数据库 · AI 功能产品化</p>
+            <p class="skill-proof">佐证 — 拾忆 NPC 对话、基金每日 AI 报告与持仓 OCR</p>
+          </div>
+          <div class="card skill-card reveal d3">
+            <p class="skill-num">02</p>
+            <p class="skill-name">Web 全栈</p>
+            <p class="skill-items">Vue 3 · Nuxt 4 · TypeScript · FastAPI · PostgreSQL · REST API</p>
+            <p class="skill-proof">佐证 — 知宠官网、拾忆、基金三个全栈项目</p>
+          </div>
+          <div class="card skill-card reveal d4">
+            <p class="skill-num">03</p>
+            <p class="skill-name">移动端开发</p>
+            <p class="skill-items">HarmonyOS · ArkTS · ArkUI · Android · Java</p>
+            <p class="skill-proof">佐证 — 坦克大战、三问学习机、小乖记账</p>
+          </div>
+          <div class="card skill-card reveal d5">
+            <p class="skill-num">04</p>
+            <p class="skill-name">工程与交付</p>
+            <p class="skill-items">Git / GitHub · Prisma · 云部署 · 邮件队列 · 数据持久化 · 打包发布</p>
+            <p class="skill-proof">佐证 — 知宠官网生产部署、基金打包免环境应用</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 更多作品（知宠式固定舞台轮播） -->
+    <section class="scene" data-c1="#5fc8e8" data-c2="#8b9dff" data-accent="#6fc0e8" id="works">
+      <div class="scene-inner wide">
+        <div class="scene-head">
+          <p class="scene-num reveal">05</p>
+          <h2 class="scene-title-sm reveal d1">更多作品</h2>
+          <p class="scene-sub-sm reveal d2">完成度优先 · 真实产品界面 · 可访问项目源码</p>
+        </div>
+        <div class="project-carousel reveal d3" data-project-carousel role="region" aria-roledescription="轮播" aria-label="其他作品" tabindex="0">
+          <div class="project-stage" aria-live="polite">
+            <article class="project-slide is-active" data-project="threeq" aria-hidden="false">
+              <img class="project-media" src="images/works/threeq.jpeg" alt="三问高效学习机 HarmonyOS 应用首页界面">
+              <div class="project-shade" aria-hidden="true"></div>
+              <div class="project-copy">
+                <p class="project-kicker">01 · AI LEARNING</p>
+                <h3 class="project-title">三问高效学习机</h3>
+                <p class="project-desc">面向 AI 时代大学生的认知闭环工具，围绕「心智模型 → 学术争议 → 深度测评」三问法，把问题输入转化为可追踪的学习路径。</p>
+                <ul class="project-tags" aria-label="技术与能力"><li>HarmonyOS</li><li>ArkTS</li><li>FastAPI</li><li>ChromaDB</li></ul>
+                <div class="project-actions">
+                  <a class="project-link primary" href="https://github.com/Anson-Yuz/threeq-learning" target="_blank" rel="noopener">查看源码 ↗</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-slide" data-project="xiaoguai" aria-hidden="true">
+              <img class="project-media" src="images/works/xiaoguai.png" alt="小乖记账 Android 应用收支明细界面">
+              <div class="project-shade" aria-hidden="true"></div>
+              <div class="project-copy">
+                <p class="project-kicker">02 · ANDROID APP</p>
+                <h3 class="project-title">小乖记账</h3>
+                <p class="project-desc">原生 Android 记账应用，覆盖收支记录、分类统计、预算与数据本地化，是一次从交互设计到移动端落地的完整实践。</p>
+                <ul class="project-tags" aria-label="技术与能力"><li>Java</li><li>Android</li><li>SQLite</li><li>数据可视化</li></ul>
+                <div class="project-actions">
+                  <a class="project-link primary" href="https://github.com/Anson-Yuz/xiaoguai-accounting" target="_blank" rel="noopener">查看源码 ↗</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-slide" data-project="battlecity" aria-hidden="true">
+              <img class="project-media" src="images/works/battlecity.png" alt="坦克大战二战战役主界面">
+              <div class="project-shade" aria-hidden="true"></div>
+              <div class="project-copy">
+                <p class="project-kicker">03 · GAME SYSTEM</p>
+                <h3 class="project-title">坦克大战</h3>
+                <p class="project-desc">把经典坦克大战重制成带指挥系统的二战战役：八种战术指令、军事风 UI 与逐帧战斗反馈，形成可持续扩展的游戏系统。</p>
+                <ul class="project-tags" aria-label="技术与能力"><li>ArkTS</li><li>ArkUI</li><li>Canvas</li><li>系统设计</li></ul>
+                <div class="project-actions">
+                  <a class="project-link primary" href="https://github.com/Anson-Yuz/battle-city" target="_blank" rel="noopener">查看源码 ↗</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-slide" data-project="yujian" aria-hidden="true">
+              <img class="project-media" src="images/works/yujian.png" alt="预鉴城市道路积水风险研判平台界面">
+              <div class="project-shade" aria-hidden="true"></div>
+              <div class="project-copy">
+                <p class="project-kicker">04 · DATA INTELLIGENCE</p>
+                <h3 class="project-title">预鉴</h3>
+                <p class="project-desc">城市道路积水风险预判平台，用数据与模型提前识别内涝风险，并把实时画面、风险曲线和研判证据集中到一个工作台中。</p>
+                <ul class="project-tags" aria-label="技术与能力"><li>Python</li><li>风险模型</li><li>数据可视化</li><li>只读演示</li></ul>
+                <div class="project-actions">
+                  <a class="project-link primary" href="https://github.com/Anson-Yuz/flood-intelligence" target="_blank" rel="noopener">查看源码 ↗</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-slide" data-project="history" aria-hidden="true">
+              <img class="project-media" src="images/works/history.png" alt="史鉴历史沉浸体验首页界面">
+              <div class="project-shade" aria-hidden="true"></div>
+              <div class="project-copy">
+                <p class="project-kicker">05 · AI NARRATIVE DEMO</p>
+                <h3 class="project-title">史鉴</h3>
+                <p class="project-desc">以旁观者视角见证中华五千年，通过时代叙事、NPC 对话和信物收集探索 AI 驱动的历史沉浸体验。</p>
+                <ul class="project-tags" aria-label="技术与能力"><li>Vue 3</li><li>TypeScript</li><li>DeepSeek</li><li>叙事设计</li></ul>
+                <div class="project-actions">
+                  <a class="project-link primary" href="https://github.com/Anson-Yuz/history-chronicles" target="_blank" rel="noopener">查看源码 ↗</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-slide" data-project="weather" aria-hidden="true">
+              <img class="project-media" src="images/works/weather.jpeg" alt="鸿蒙天气深圳十五日天气界面">
+              <div class="project-shade" aria-hidden="true"></div>
+              <div class="project-copy">
+                <p class="project-kicker">06 · HARMONYOS APP</p>
+                <h3 class="project-title">鸿蒙天气</h3>
+                <p class="project-desc">鸿蒙 ArkTS 天气应用，覆盖实时天气、逐小时与十五日预报、空气质量和生活指数，重点打磨天气氛围与信息层级。</p>
+                <ul class="project-tags" aria-label="技术与能力"><li>HarmonyOS</li><li>ArkTS</li><li>ArkUI</li><li>天气 API</li></ul>
+                <div class="project-actions">
+                  <a class="project-link primary" href="https://github.com/Anson-Yuz/harmony-weather" target="_blank" rel="noopener">查看源码 ↗</a>
+                </div>
+              </div>
+            </article>
+
+            <button class="project-arrow prev" type="button" data-carousel-prev aria-label="上一个项目">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="project-arrow next" type="button" data-carousel-next aria-label="下一个项目">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+
+          </div>
+          <div class="project-footer">
+            <span class="project-footer-note">6 个补充作品 · 真实界面 · 可访问源码</span>
+            <a class="project-profile-link" href="https://github.com/Anson-Yuz" target="_blank" rel="noopener">全部仓库 ↗</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 关于 -->
+    <section class="scene" data-c1="#c8b89d" data-c2="#7c8cff" data-accent="#c8bfa8" id="about">
+      <div class="scene-inner">
+        <div class="scene-text">
+          <p class="scene-num reveal">06</p>
+          <h2 class="scene-title-sm reveal d1">关于我</h2>
+          <p class="scene-desc reveal d2" style="max-width:520px;margin-top:1.4rem">跨平台独立开发者，目前在深圳，2025 届。从 Android 到 HarmonyOS，从 Web 到 Windows 桌面，从课程作业到黑客松——习惯一个人把产品从想法推到可用：需求、架构、前后端、AI 集成、打包发布，全栈到端。</p>
+          <div class="about-stats reveal d3">
+            <div class="about-stat"><div class="n">5<em>+</em></div><div class="l">独立产品</div></div>
+            <div class="about-stat"><div class="n">4</div><div class="l">目标平台</div></div>
+            <div class="about-stat"><div class="n">3</div><div class="l">AI 驱动应用</div></div>
+            <div class="about-stat"><div class="n">2</div><div class="l">游戏作品</div></div>
+          </div>
+        </div>
+        <div class="reveal d3">
+          <div class="card cred-box">
+            <p class="cred-title">资质 CREDENTIALS</p>
+            <p class="cred-hint">点击查看证书大图</p>
+            <div class="cred-item" data-cert="images/cert-hcia-ai.png">
+              <div class="cred-name">华为 HCIA-AI 认证</div>
+              <div class="cred-issuer">华为 Huawei</div>
+            </div>
+            <div class="cred-item" data-cert="images/cert-ai-agent.png">
+              <div class="cred-name">AI Agent 技术与应用微认证</div>
+              <div class="cred-issuer">华为云</div>
+            </div>
+            <div class="cred-item" data-cert="images/cert-deepseek-rag.png">
+              <div class="cred-name">基于 DeepSeek 和 RAG 构建智能小助手微认证</div>
+              <div class="cred-issuer">华为云</div>
+            </div>
+            <div class="cred-item" data-cert="images/cert-ai-tech.png">
+              <div class="cred-name">华为人工智能技术链与实践微认证</div>
+              <div class="cred-issuer">华为</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 联系 -->
+    <section class="scene center" data-c1="#7c8cff" data-c2="#4fe0c8" data-accent="#8b9dff" id="contact">
+      <div class="scene-inner">
+        <div>
+          <p class="scene-tag reveal" style="color:var(--ink-faint)">// 找我聊聊</p>
+          <h2 class="scene-title reveal d1" style="font-size:clamp(2.8rem,6vw,5rem)">项目合作 · 技术交流<br>或只是打个招呼</h2>
+          <p class="reveal d3" style="margin:2rem 0"><a class="contact-mail" href="mailto:anson021220@gmail.com">anson021220@gmail.com</a></p>
+          <div class="scene-btns reveal d4">
+            <a class="scene-btn" href="mailto:anson021220@gmail.com">发邮件 →</a>
+            <a class="scene-btn" href="resume.pdf" download="张裕霖-简历.pdf">获取简历 ↓</a>
+            <a class="scene-btn ghost" href="https://github.com/Anson-Yuz" target="_blank" rel="noopener">GitHub ↗</a>
+          </div>
+          <p class="hero-status reveal d5" style="margin-top:3rem">© 2026 张裕霖 · 把想法造成产品</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 证书 Lightbox -->
+  <div class="cert-lightbox" id="certLightbox">
+    <div class="cert-lightbox-bg"></div>
+    <img id="certLightboxImg" src="" alt="证书">
+    <button class="cert-close" id="certClose" aria-label="关闭">×</button>
+  </div>
+
+  <!-- 回到首页 -->
+  <button class="back-top" id="backTop" aria-label="回到首页">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+
+<script src="carousel.js?v=20260801-2"></script>
+<script src="video-controller.js?v=20260805-1"></script>
+<script>
+  const scroller=document.getElementById('scroller');
+  const scenes=[...document.querySelectorAll('.scene')];
+  const dotsBox=document.getElementById('dots');
+  const root=document.documentElement;
+  const demoVideoControllers=window.PortfolioVideo
+    ? window.PortfolioVideo.mountDemoVideos(document)
+    : [];
+
+  scenes.forEach((s,i)=>{
+    const d=document.createElement('button');
+    d.className='dot'; d.setAttribute('aria-label','第'+(i+1)+'屏');
+    d.onclick=()=>s.scrollIntoView({behavior:'smooth'});
+    dotsBox.appendChild(d);
+  });
+  const dots=[...dotsBox.children];
+
+  const io=new IntersectionObserver((es)=>{
+    es.forEach(e=>{
+      if(e.isIntersecting){
+        const s=e.target;
+        root.style.setProperty('--c1',s.dataset.c1);
+        root.style.setProperty('--c2',s.dataset.c2);
+        root.style.setProperty('--accent',s.dataset.accent);
+        s.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+        demoVideoControllers.forEach(controller=>{
+          if(!s.contains(controller.frame))controller.pause();
+        });
+        const activeVideoController=demoVideoControllers.find(controller=>s.contains(controller.frame));
+        if(activeVideoController)activeVideoController.play();
+        const i=scenes.indexOf(s);
+        dots.forEach((d,j)=>d.classList.toggle('active',j===i));
+      }
+    });
+  },{root:scroller,threshold:.5});
+  scenes.forEach(s=>io.observe(s));
+
+  document.querySelectorAll('[data-go]').forEach(a=>{
+    a.addEventListener('click',e=>{
+      e.preventDefault();
+      const t=document.getElementById(a.dataset.go);
+      if(t)t.scrollIntoView({behavior:'smooth'});
+    });
+  });
+
+  // 调试：?noanim 直接显示所有内容并禁用 snap（用于截图验证）
+  if(location.search.includes('noanim')){
+    document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+    scroller.style.scrollSnapType='none';
+  }
+  const st=new URLSearchParams(location.search).get('scrollto');
+  if(st){requestAnimationFrame(()=>{scroller.style.scrollSnapType='none';scroller.scrollTop=parseInt(st,10);});}
+  // 支持 URL hash 直接跳到某屏
+  if(location.hash){
+    requestAnimationFrame(()=>{
+      const t=document.querySelector(location.hash);
+      if(t&&t.classList.contains('scene')){t.scrollIntoView({behavior:'auto',block:'start'});}
+    });
+  }
+
+  // ===== 视频进度条（hover 显示，可点击/拖动跳转） =====
+  function fmt(t){if(!isFinite(t))return '0:00';const m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+String(s).padStart(2,'0');}
+  document.querySelectorAll('.demo-frame[data-video]').forEach(frame=>{
+    const video=frame.querySelector('video');
+    const progress=frame.querySelector('.demo-progress');
+    const fill=frame.querySelector('.demo-progress-fill');
+    const time=frame.querySelector('.demo-time');
+    if(!video||!progress)return;
+    video.addEventListener('timeupdate',()=>{
+      if(video.duration){
+        fill.style.width=(video.currentTime/video.duration*100)+'%';
+        time.textContent=fmt(video.currentTime)+' / '+fmt(video.duration);
+      }
+    });
+    let seeking=false;
+    function seek(e){
+      const rect=progress.getBoundingClientRect();
+      let ratio=(e.clientX-rect.left)/rect.width;
+      ratio=Math.max(0,Math.min(1,ratio));
+      if(video.duration)video.currentTime=ratio*video.duration;
+    }
+    progress.addEventListener('pointerdown',e=>{seeking=true;seek(e);progress.setPointerCapture(e.pointerId);});
+    progress.addEventListener('pointermove',e=>{if(seeking)seek(e);});
+    progress.addEventListener('pointerup',()=>{seeking=false;});
+  });
+
+  // ===== 更多作品轮播（固定舞台 + 有界切换） =====
+  const projectCarousel=document.querySelector('[data-project-carousel]');
+  if(projectCarousel&&window.PortfolioCarousel){
+    window.PortfolioCarousel.mountProjectCarousel(projectCarousel,{
+      interval:5600,
+      autoplay:!location.search.includes('noanim')
+    });
+  }
+
+  // ===== 证书 Lightbox =====
+  const lb=document.getElementById('certLightbox');
+  const lbImg=document.getElementById('certLightboxImg');
+  document.querySelectorAll('.cred-item[data-cert]').forEach(item=>{
+    item.addEventListener('click',()=>{
+      lbImg.src=item.dataset.cert;
+      lb.classList.add('show');
+    });
+  });
+  function closeCert(){lb.classList.remove('show');}
+  document.getElementById('certClose').onclick=closeCert;
+  lb.querySelector('.cert-lightbox-bg').onclick=closeCert;
+  addEventListener('keydown',e=>{if(e.key==='Escape')closeCert();});
+
+  // ===== 回到首页 =====
+  const backTop=document.getElementById('backTop');
+  scroller.addEventListener('scroll',()=>{
+    backTop.classList.toggle('show', scroller.scrollTop > innerHeight*0.5);
+  },{passive:true});
+  backTop.addEventListener('click',()=>{
+    document.getElementById('s0').scrollIntoView({behavior:'smooth'});
+  });
+
+  // 鼠标视差光球
+  const blobs=document.querySelectorAll('.blob');
+  let mx=0,my=0,cx=0,cy=0;
+  addEventListener('mousemove',e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5;},{passive:true});
+  (function loop(){
+    cx+=(mx-cx)*.04;cy+=(my-cy)*.04;
+    blobs.forEach((b,i)=>{const f=(i+1)*12;b.style.translate=`${cx*f}px ${cy*f}px`;});
+    requestAnimationFrame(loop);
+  })();
+</script>
+</body>
+</html>

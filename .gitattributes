@@ -1,0 +1,15 @@
+# 文本文件统一用 LF，避免 Windows 下 CRLF 污染与无意义 diff
+* text=auto eol=lf
+
+# 二进制资源：禁止任何换行/编码转换（否则 PDF/视频/图片会损坏）
+*.pdf  binary
+*.mp4  binary
+*.mov  binary
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.woff  binary
+*.woff2 binary
